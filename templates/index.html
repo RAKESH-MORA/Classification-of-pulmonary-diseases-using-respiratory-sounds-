@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/styles.css')}}" />
+  <title>Respiratory Disorder Classification Using Lung Auscultation Sounds</title>
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+
+    .body-index {
+      padding: 20px;
+    }
+
+    /* Title Styling */
+    .titleColor h1 {
+      font-size: 3rem; /* Larger font size for the title */
+      color: #1e90ff; /* Dodger blue color */
+      font-weight: 700; /* Bold font weight */
+      text-align: center; /* Center align the title */
+      text-transform: uppercase; /* Uppercase letters */
+      letter-spacing: 2px; /* Spacing between letters */
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow effect */
+      margin-bottom: 30px; /* Space below the title */
+      animation: fadeIn 2s ease-in-out; /* Fade-in animation */
+    }
+
+    /* Animation for Title */
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .jumbotron {
+      background-color: #e9ecef;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-control {
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+      font-size: 1.1rem;
+      font-weight: 500;
+      border-radius: 5px;
+      padding: 10px 20px;
+      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+
+    .prediction h1 {
+      font-size: 2rem;
+      color: #ff6347;
+      font-weight: 700;
+    }
+
+    .container h2 {
+      font-size: 1.5rem;
+      color: #555;
+      font-weight: 600;
+    }
+
+    .container audio {
+      margin-top: 10px;
+    }
+
+    .container img {
+      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .jumbotron h2 {
+      font-size: 1.8rem;
+      color: #333;
+      font-weight: 700;
+    }
+
+    .jumbotron p {
+      font-size: 1.2rem;
+      color: #555;
+    }
+
+    .no-print {
+      display: none;
+    }
+
+    @media print {
+      .no-print {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  {% if ospf %}
+  <div class="body-index">
+    <div class="titleColor">
+      <h1>Respiratory Disorder Classification Using Lung Auscultation Sounds</h1>
+    </div>
+
+    <div class="jumbotron jumbotron-fluid">
+      <div class="container">
+        <form action="/" method="POST" enctype="multipart/form-data" data-netlify="true">
+          <div class="form-group">
+            <label for="name">Patient id:</label>
+            <input type="text" class="form-control" id="name" name="name" />
+          </div>
+
+          
+          <div class="form-group">
+            <label for="lungSounds">Input Patient Lung Auscultation Sound File (.wav format):</label>
+            <input type="file" name="lungSounds" class="form-control-file" onchange="readURL(this);" accept=".wav" />
+          </div>
+          <button type="submit" class="btn btn-primary">Detect</button>
+          <a href="{{ url_for('chart') }}" class="btn btn-primary">Graph</a>
+
+        </form>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      function readURL(input) {
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            $("#lungSounds").attr("src", e.target.result);
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+    </script>
+  </div>
+  {% endif %}
+
+  {% if ospf == 0 %}
+  <div class="prediction">
+    <h1 id="demo" class="text-center my-3 py-2 border border-secondary">Patient Report of {{n}}</h1>
+
+    <div class="container">
+      <h2 class="my-2 no-print">Given Sound File:</h2>
+      
+      <audio controls class="no-print">
+        <source
+          src="{{lungSounds}}"
+          type="audio/wav"
+          alt=" {{n}} lung sounds"
+        />
+        Your browser does not support the audio element.
+      </audio>
+      <img id="lungSounds" src="{{ url_for('static', filename='uploads/outSoundWave.png') }}" alt="lung sounds img" width="500" height="500" />
+      <img id="lungSounds2" src="{{ url_for('static', filename='uploads/outSoundMFCC.png') }}" alt="lung sounds MFCC img" width="500" height="500" />
+      <div class="jumbotron jumbotron-fluid my-2 px-2">
+        <h2>Detection Results:</h2>
+        <h2 class="my-2">{{res[0]}}</h2>
+      </div>
+      <button onclick="get_pdf()" class="btn btn-primary my-3 no-print">Download Patient Report</button>
+    </div>
+
+    <script>
+      var x = document.getElementById("demo");
+      const t = x.innerHTML;
+
+      function gen_text() {
+        if (x.innerHTML === "Click to download patient Report") {
+          x.innerHTML = t;
+        } else {
+          x.innerHTML = "Click to download patient Report";
+        }
+      }
+
+      function get_pdf() {
+        window.print();
+      }
+    </script>
+  </div>
+  {% endif %}
+
+  <!-- Optional JavaScript -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKpYfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
